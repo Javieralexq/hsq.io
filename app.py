@@ -49,12 +49,20 @@ lottie_header = load_lottie_url(LOTTIE_SECURITY_URL)
 def get_database_engine():
     """Inicializa y reutiliza el pool de conexiones a la base de datos."""
     try:
-        if "connections" in st.secrets and "supabase" in st.secrets["connections"]:
-            db_url = st.secrets["connections"]["supabase"]["url"]
-        elif "DATABASE_URL" in st.secrets:
-            db_url = st.secrets["DATABASE_URL"]
-        else:
-            st.error("No se encontró la cadena de conexión en st.secrets.")
+        import os
+        db_url = os.environ.get("DATABASE_URL")
+        
+        if not db_url:
+            try:
+                if "connections" in st.secrets and "supabase" in st.secrets["connections"]:
+                    db_url = st.secrets["connections"]["supabase"]["url"]
+                elif "DATABASE_URL" in st.secrets:
+                    db_url = st.secrets["DATABASE_URL"]
+            except Exception:
+                pass
+                
+        if not db_url:
+            st.error("No se encontró la cadena de conexión en las variables de entorno ni en st.secrets.")
             st.stop()
             
         if db_url.startswith("postgres://"):
